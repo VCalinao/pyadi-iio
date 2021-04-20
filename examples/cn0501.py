@@ -39,7 +39,6 @@ import numpy as np
 import libm2k
 
 print("Import Done Na")
-
 N_SAMPLES = 1024
 
 adc = ad7768(uri="ip:10.116.177.40")
