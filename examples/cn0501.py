@@ -30,6 +30,7 @@
 # BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 # THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+print("Hey Running Na")
 
 from scipy.signal import periodogram
 import matplotlib.pyplot as plt
@@ -37,14 +38,16 @@ from adi import ad7768
 import numpy as np
 import libm2k
 
+print("Import Done Na")
+
 N_SAMPLES = 1024
 
-adc = ad7768()
+adc = ad7768(uri="ip:10.116.177.40")
 adc.sample_rate = 256000
 adc.power_mode = "FAST_MODE"
 adc.filter = "SINC5"
 
-m2k = libm2k.m2kOpen()
+m2k = libm2k.m2kOpen("ip:192.168.2.1")
 m2k.calibrateDAC()
 aout = m2k.getAnalogOut()
 aout.setSampleRate(0, 750000)
@@ -54,8 +57,15 @@ aout.enableChannel(1, True)
 aout.setCyclic(True)
 
 x = np.linspace(-np.pi, np.pi, N_SAMPLES)
-w1_p = np.sin(x) + 2.5
-w1_n = np.sin(x + np.pi) + 2.5
+#1.5V to 3.5V
+#w1_p = np.sin(x) + 2.5 
+#w1_n = np.sin(x + np.pi) + 2.5
+
+w1_p = np.ones(len(x))*1.5
+w1_n = np.zeros(len(x))
+
+print(w1_p)
+print(w1_n)
 
 buff = [np.array([aout.convertVoltsToRaw(0, item) for item in w1_p], dtype='int16'),
         np.array([aout.convertVoltsToRaw(1, item) for item in w1_n], dtype='int16')]

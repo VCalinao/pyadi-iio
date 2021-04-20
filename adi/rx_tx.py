@@ -72,7 +72,7 @@ class rx(attribute):
         self._num_rx_channels = len(self._rx_channel_names)
         self.rx_enabled_channels = rx_enabled_channels
         self.rx_buffer_size = rx_buffer_size
-
+        
     @property
     def rx_buffer_size(self):
         """rx_buffer_size: Size of receive buffer in samples"""
