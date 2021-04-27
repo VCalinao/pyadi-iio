@@ -61,8 +61,8 @@ class ad7768(rx, context_manager):
             self._device_name = "cf_axi_adc"
 
         rx.__init__(self)
-        #self.rx_buffer_size = 400
-        self.rx_buffer_size = 256000
+        self.rx_buffer_size = 400
+        #self.rx_buffer_size = 256000
 
     def rx(self):
         data = np.array(rx.rx(self))
