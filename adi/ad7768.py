@@ -62,13 +62,10 @@ class ad7768(rx, context_manager):
 
         rx.__init__(self)
         self.rx_buffer_size = 400
-        #self.rx_buffer_size = 256000
 
     def rx(self):
         data = np.array(rx.rx(self))
-        #n_sample = 1000
         n_sample = data.shape[1]
-        print(n_sample)
         
         if (self._device_name == "cf_axi_adc"):
             data = [_cast32(sample) for channel in data for sample in channel]

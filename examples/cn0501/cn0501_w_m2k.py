@@ -26,159 +26,85 @@
 #
 # IN NO EVENT SHALL ANALOG DEVICES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 # EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, INTELLECTUAL PROPERTY
-# RIGHTS, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# RIGHTS, PROCUREMENT OF SUBSTIT11111111111111111111111111111111111111111111111111111111111111111111UTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
 # BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 # THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 print("Program start")
 
+import math
+import pandas as pd
+import time
 from scipy.signal import periodogram,find_peaks,ricker
 import matplotlib.pyplot as plt
-from adi import ad7768
 import numpy as np
+import os
+print("Python Packages Import done")
+
+from adi import ad7768
 import libm2k
-import pandas as pd
-import math
-import time
+print("ADI Packages Import done")
 
-print("Import done")
+import m2k_ricker_wav 
 
-ctx=libm2k.m2kOpen()
-if ctx is None:
-    print("Connection Error: No ADALM2000 device available/connected to your PC.")
-    exit(1)
 
 loops = 0
 ch = 0
-freq = 0
-amplitude = 0
+nsecs=0
 fname = ""
+
+cwd = os.getcwd()
+fpath = cwd + "\examples\cn0501\csv_files\\"
+print ("Filepath: " + fpath)
 
 def test_param():
     #GEOPHONE A0:A1:A2
     #ADXL A4:A5:A6
-    global loops,ch,freq,fname,amplitude
-    print("\nHow many loops?")
-    #loops = int(input())
-    loops = 11
-    print("\nWhat channel?")
-    #ch = int(input())
-    ch = 2
-    print("\nSine Frequency/ Num of Ricker peaks?")
-    #freq = float(input())
-    freq = 3
-    print("\nSine/Ricker amplitude?")
-    #amplitude1 = float(input())
-    amplitude = 5
+    global loops,ch,fname,nsecs
 
-    print("\nExport filename?")
-    #fname = input()
-    fname = "ch"+str(ch)+"_npks"+str(freq)
+    #print("\nHow many loops?")
+    loops = 2
+    #print("\nWhat channel?")
+    ch = 0
 
-def m2k():
-    ctx.calibrateDAC()
-    aout=ctx.getAnalogOut()  
+    #print("\n # Seconds record")
+    nsecs = 3
 
-    #Sine wave
-    #Frequency in Hertz
-    f = freq
-    #Samples per second
-    N = 750000
-    #Peak amplitude in Volts
-    vpeak = amplitude/2
-    #DC offset in volts
-    offset = vpeak
+    #print("\nExport filename?")
+    fname = "ch"+str(ch)
 
-    x=np.arange(0,1,1/N)
-
-    sine_func= vpeak*np.sin(2*np.pi*f*x) + offset
-
-    #Ricker wavelet
-    vpp = amplitude #pk-pk amplitude of wavelet
-    n_peak=int(freq) #Number of wavelet peaks
-    n_points = int(N/n_peak) #number of points per wavelet
-    width_param = int(n_points*.05) #5% width parameter
-    x = ricker(n_points,width_param) #generate wavelet
-    v_scale = vpp/(np.max(x)-np.min(x)) #scale to fit vpp
-    x= v_scale*x
-
-    rick_offset = 0 - np.min(x)
-    x = x+rick_offset
-
-    
-    if n_peak > 1:
-        ricker_wav = np.concatenate((x,x))
-        for _ in range(1,n_peak-1):
-            ricker_wav= np.concatenate((ricker_wav,x))
-    else:
-        ricker_wav = x
-
-    
-
-    ramp_f = np.linspace(0,amplitude, num = N)
-    fixed_dc = amplitude*np.ones(N)
-
-    print("Test value") 
-    print(len(ramp_f))
-
-    #buffer2 = sine_func
-    buffer2 = ricker_wav
-    #buffer2 = ramp_f
-    #buffer2 = fixed_dc
-    buffer1 = buffer2
-
-    aout.setSampleRate(0, N)
-    aout.setSampleRate(1, N)
-    aout.enableChannel(0, True)
-    aout.enableChannel(1, True)
-
-    buffer = [buffer1, buffer2]
-
-    aout.setCyclic(True)
-    aout.push(buffer)
-
-    m2k_out = np.asarray(buffer2)
-    m2k_out = m2k_out.reshape(N,1)
-
-    DF = pd.DataFrame(m2k_out)
-    f = fname + "_stimuli.csv"
-    #print(f)
-    #File directory of exported csv files  
-    DF.to_csv(r"C:\Users\VCalinao\pyadi-iio\examples\csv_files\\"+f, index = False, header = False)
-
+   
 def cn0501(): 
-    adc = ad7768(uri="ip:10.116.177.41")
+    adc = ad7768(uri="ip:169.254.92.202")
     adc.power_mode = "FAST_MODE" #FAST_MODE MEDIAN_MODE LOW_POWER_MODE
     adc.filter = "SINC5"
     srate = [8000,16000,32000,64000,128000,256000]
-    #srate = [64000,128000,256000]
     for sps in srate:
         adc.sample_rate = sps
-       # adc.rx_buffer_size = int(adc.sample_rate/100)
-        adc.rx_buffer_size = 400
-        if sps > 32000:
-            adc.rx_buffer_size = 400
-        print("Sample Rate")
-        print(adc.sample_rate)
+        adc.rx_buffer_size = 800
+        
+        #if sps > 32000:
+            #adc.rx_buffer_size = 8192
+        
+        #print("Sample Rate")
+        #print(adc.sample_rate)
 
-        print("Buffer size")
-        print(adc.rx_buffer_size)
+        #print("Buffer Size")
+        #print(adc.rx_buffer_size)
 
-        print("Enabled Channels")
+        #print("Kernel Buffers Count")
+        #print(adc.get_kernel_buffers_count)
+
+        #print("Enabled Channels")
         #print (adc.rx_enabled_channels)
-        nsecs = 3
+        
         sec_rec = math.ceil(adc.sample_rate/adc.rx_buffer_size)*nsecs
-        '''
-        print("\nHow many loops?")
-        loops = int(input())
-        print("\nWhat channel?")
-        ch = int(input())
-        print("\nExport filename?")
-        fname = input()
-        '''
+    
         print("\nSTART RECORD\n")
 
         for nloop in range(0,loops):
+            if nloop == 1:
+                adc.rx_buffer_size = 8192
             print(nloop)
             vdata = []
             count = 0
@@ -188,36 +114,25 @@ def cn0501():
                     vdata.append(data[ch])
                     count += len(data[ch])
             end = time.time()
-            
             c = (end - start)
-            print("Elapsed: " + str(c))
-            #print(c.total_seconds())
+            print("Elapsed: " + str(c) +"s")
 
             vdata_arr = np.asarray(vdata)
             vdata_arr = vdata_arr.reshape(count,1)
 
             DF = pd.DataFrame(vdata_arr)
-            f = fname + "_loop" + str(nloop)+"_sps"+str(sps)+".csv"
-            #f= "32ksps.csv"
-            #print(f)
-            #File directory of exported csv files 
-            DF.to_csv(r"C:\Users\VCalinao\pyadi-iio\examples\csv_files\\"+f, index = False, header = False)
-        print("Export done")
-    #print(len(vdata_arr))
-    #npeaks = find_peaks(s)
-    #print(npeaks)
-    #x = np.arange(0,1,1/len(vdata_arr))
-    #plt.plot(x,vdata_arr)
-    #plt.show()
+            f = fname + "_loop" + str(nloop)+"_sps"+str(sps)+"_buffer"+str(int(adc.rx_buffer_size))+".csv"
 
+            #File directory of exported csv files 
+            DF.to_csv(fpath+f, index = False, header = False)
+        print("Export done")
 
 def main():
     test_param()
-    m2k()
+    m2k_ricker_wav.wavdiff_out()
+    #m2k_ricker_wav.wavsingle_out()
     cn0501()
-
-    print("Close M2K handler")
-    libm2k.contextClose(ctx)
+    m2k_ricker_wav.wav_close()
 
 main()
 
