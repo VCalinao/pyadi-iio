@@ -7,7 +7,6 @@ import numpy as np
 import os
 #print("Python Packages Import done")
 
-from adi import ad7768
 import libm2k
 #print("ADI Packages Import done")
 
@@ -29,7 +28,7 @@ t = np.arange(0,1,1/N)
 
 
 #Ricker wavelet
-vpp =  .5                        #pk-pk amplitude of wavelet
+vpp =  .5                      #pk-pk amplitude of wavelet
 n_peak= 2                           #Number of wavelet peaks
 n_points = int(N/n_peak)            #number of points per wavelet
 width_param = int(n_points*.05)     #5% width parameter
@@ -92,17 +91,22 @@ def wavdiff_out():
 
     m2k_out1 = np.asarray(w1_data)
     m2k_out1 = m2k_out1.reshape(N,1)
-    DF = pd.DataFrame(m2k_out1)
+    w1DF = pd.DataFrame(m2k_out1)
 
     m2k_out2 = np.asarray(w2_data)
     m2k_out2 = m2k_out2.reshape(N,1)
-    DF = pd.DataFrame(m2k_out2)
+    w2DF = pd.DataFrame(m2k_out2)
+
+    wdiffDF = pd.DataFrame(m2k_out1-m2k_out2)
 
 
-    f1 = "w1_ricker_wav_0v5pp.csv"
-    f2 = "w2_ricker_wav_0v5pp.csv"
-    DF.to_csv(fpath+f1, index = False, header = False)
-    DF.to_csv(fpath+f2, index = False, header = False)
+    f1 = "w1_ricker_wav_5vpp.csv"
+    f2 = "w2_ricker_wav_5vpp.csv"
+    f3 = "diff_ricker_wav_0v5pp.csv"
+    #w1DF.to_csv(fpath+f1, index = False, header = False)
+    #w2DF.to_csv(fpath+f2, index = False, header = False)
+    #wdiffDF.to_csv(fpath+f3, index = False, header = False)
+
 
     aout.setCyclic(True)
     aout.push(buffer)

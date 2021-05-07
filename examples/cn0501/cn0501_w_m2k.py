@@ -41,7 +41,7 @@ import numpy as np
 import os
 print("Python Packages Import done")
 
-from adi import ad7768
+from adi.ad7768 import ad7768
 import libm2k
 print("ADI Packages Import done")
 
@@ -133,7 +133,7 @@ def cn0501():
             f = fname + "_loop" + str(nloop)+"_sps"+str(sps)+"_5vpp"+".csv"
 
             #File directory of exported csv files 
-            DF.to_csv(fpath+f, index = False, header = False)
+            #DF.to_csv(fpath+f, index = False, header = False)
 
         
         print("Export done")
