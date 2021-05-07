@@ -63,29 +63,27 @@ def test_param():
     global loops,ch,fname,nsecs
 
     #print("\nHow many loops?")
-    loops = 2
+    loops = 1
     #print("\nWhat channel?")
     ch = 0
 
     #print("\n # Seconds record")
-    nsecs = 3
+    nsecs = 2 
 
     #print("\nExport filename?")
     fname = "ch"+str(ch)
-
    
+
 def cn0501(): 
-    adc = ad7768(uri="ip:169.254.92.202")
-    adc.power_mode = "FAST_MODE" #FAST_MODE MEDIAN_MODE LOW_POWER_MODE
-    adc.filter = "SINC5"
     srate = [8000,16000,32000,64000,128000,256000]
+
     for sps in srate:
-        adc.sample_rate = sps
-        adc.rx_buffer_size = 800
-        
-        #if sps > 32000:
-            #adc.rx_buffer_size = 8192
-        
+        adc = ad7768(uri="ip:169.254.92.202")
+        adc.power_mode = "FAST_MODE" #FAST_MODE MEDIAN_MODE LOW_POWER_MODE
+        adc.filter = "SINC5"
+        adc.sample_rate = sps 
+        adc.rx_buffer_size = int(sps*2) #max 512000
+    
         #print("Sample Rate")
         #print(adc.sample_rate)
 
@@ -98,33 +96,46 @@ def cn0501():
         #print("Enabled Channels")
         #print (adc.rx_enabled_channels)
         
-        sec_rec = math.ceil(adc.sample_rate/adc.rx_buffer_size)*nsecs
-    
-        print("\nSTART RECORD\n")
+        #sec_rec = math.ceil(adc.sample_rate/adc.rx_buffer_size)*nsecs #use if 1 sec worth of record
+        sec_rec = math.ceil(adc.sample_rate/adc.rx_buffer_size) #use for n sec worth
 
+
+        print("\nSTART RECORD\n")
         for nloop in range(0,loops):
-            if nloop == 1:
-                adc.rx_buffer_size = 8192
-            print(nloop)
+            #print(nloop)
             vdata = []
             count = 0
+            dt = []
             start = time.time()
             for _ in range(int(sec_rec)):
-                    data = adc.rx() 
-                    vdata.append(data[ch])
+                    #dstart = time.time()    ####
+                    data = adc.rx()         #TRANSACTION
+                    #dend = time.time()      ####
+                    vdata.append(data[ch])  
+                    #dt.append(dend-dstart)  ####
                     count += len(data[ch])
             end = time.time()
-            c = (end - start)
-            print("Elapsed: " + str(c) +"s")
+            rec_time = (end - start)
+            
+            #print("Sample rate:   " + str(srate[0]) +"sps")
+            #print("Buffer length:   " + str(adc.rx_buffer_size) +"")
+            #print("No. of buffers:   " + str(sec_rec) +"")
+            print("Total Elapsed:   " + str(rec_time) +"s")
+            #print("adc.rx() Elapsed: " + str(np.sum(dt)) +"s")
+            #print("Average adc.rx() Elapsed: " + str(np.mean(dt)) +"s")
+            #print("others Elapsed: " + str(rec_time-np.sum(dt)) +"s")
 
             vdata_arr = np.asarray(vdata)
             vdata_arr = vdata_arr.reshape(count,1)
 
             DF = pd.DataFrame(vdata_arr)
-            f = fname + "_loop" + str(nloop)+"_sps"+str(sps)+"_buffer"+str(int(adc.rx_buffer_size))+".csv"
+            #f = fname + "_loop" + str(nloop)+"_sps"+str(sps)+"_buffer"+str(int(adc.rx_buffer_size))+".csv"
+            f = fname + "_loop" + str(nloop)+"_sps"+str(sps)+"_5vpp"+".csv"
 
             #File directory of exported csv files 
             DF.to_csv(fpath+f, index = False, header = False)
+
+        
         print("Export done")
 
 def main():

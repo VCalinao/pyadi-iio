@@ -29,7 +29,7 @@ t = np.arange(0,1,1/N)
 
 
 #Ricker wavelet
-vpp = 2                             #pk-pk amplitude of wavelet
+vpp =  .5                        #pk-pk amplitude of wavelet
 n_peak= 2                           #Number of wavelet peaks
 n_points = int(N/n_peak)            #number of points per wavelet
 width_param = int(n_points*.05)     #5% width parameter
@@ -86,7 +86,7 @@ def wavdiff_out():
     plt.plot(w1_data)
     plt.plot(w2_data)
     plt.plot(w1_data-w2_data)
-    plt.show()
+    #plt.show()
 
     buffer = [w1_data, w2_data]
 
@@ -99,8 +99,8 @@ def wavdiff_out():
     DF = pd.DataFrame(m2k_out2)
 
 
-    f1 = "w1_ricker_wav.csv"
-    f2 = "w2_ricker_wav.csv"
+    f1 = "w1_ricker_wav_0v5pp.csv"
+    f2 = "w2_ricker_wav_0v5pp.csv"
     DF.to_csv(fpath+f1, index = False, header = False)
     DF.to_csv(fpath+f2, index = False, header = False)
 
@@ -108,4 +108,4 @@ def wavdiff_out():
     aout.push(buffer)
     print("Wavelet Generated")
 
-wavdiff_out()
+#wavdiff_out()
