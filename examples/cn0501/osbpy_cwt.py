@@ -1,21 +1,39 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+import pandas as pd
 
 import obspy
 from obspy.imaging.cm import obspy_sequential
 from obspy.signal.tf_misfit import cwt
 
 
-st = obspy.read()
-tr = st[0]
-npts = tr.stats.npts
-dt = tr.stats.delta
+#File directory of exported csv files  
+print("File read")
+cwd = os.getcwd()
+fpath = cwd + "\examples\cn0501\csv_files\\"
+
+m2k_out1 = "w1_ricker_wav_5vpp.csv"
+m2k_out2 = "w2_ricker_wav_5vpp.csv"
+m2k_diff = "diff_ricker_wav_5vpp.csv"
+
+print("Data reshape")
+m2k_data = np.asarray(pd.read_csv(fpath+m2k_diff))
+m2k_data = np.reshape(m2k_data, [np.size(m2k_data)])
+
+npts = np.size(m2k_data)
+dt = .05
+
 t = np.linspace(0, dt * npts, npts)
 f_min = 1
-f_max = 50
+f_max = 1000
+'''
+'''
 
-scalogram = cwt(tr.data, dt, 8, f_min, f_max)
+print("CWT")
+scalogram = cwt(m2k_data, dt, 8, f_min, f_max)
 
+print("Start plot")
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
@@ -24,8 +42,11 @@ x, y = np.meshgrid(
     np.logspace(np.log10(f_min), np.log10(f_max), scalogram.shape[0]))
 
 ax.pcolormesh(x, y, np.abs(scalogram), cmap=obspy_sequential)
-ax.set_xlabel("Time after %s [s]" % tr.stats.starttime)
+ax.set_xlabel("Time after %s [s]" % 0)
 ax.set_ylabel("Frequency [Hz]")
 ax.set_yscale('log')
 ax.set_ylim(f_min, f_max)
+'''
+'''
+
 plt.show()
