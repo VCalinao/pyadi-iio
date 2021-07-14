@@ -101,6 +101,8 @@ from adi.ad7689 import ad7689
 
 from adi.adf4371 import adf4371
 
+from adi.ad7768 import ad7768
+
 try:
     from adi.jesd import jesd
 except ImportError:
