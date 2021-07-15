@@ -66,6 +66,7 @@ class ad7768(rx, context_manager):
     def rx(self):
         data = np.array(rx.rx(self))
         n_sample = data.shape[1]
+        
         if (self._device_name == "cf_axi_adc"):
             data = [_cast32(sample) for channel in data for sample in channel]
         data = np.reshape(data, (-1, n_sample))

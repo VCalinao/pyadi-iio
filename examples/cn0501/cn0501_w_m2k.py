@@ -41,13 +41,11 @@ import numpy as np
 import os
 print("Python Packages Import done")
 
-import adi
 from adi.ad7768 import ad7768
-#import libm2k
-from py_utils.sin_params import *
+import libm2k
 print("ADI Packages Import done")
 
-import cn0501_aux_functions
+import m2k_ricker_wav 
 
 
 loops = 0
@@ -56,7 +54,7 @@ nsecs=0
 fname = ""
 
 cwd = os.getcwd()
-fpath = cwd + "\\csv_files\\"
+fpath = cwd + "\examples\cn0501\csv_files\\"
 print ("Filepath: " + fpath)
 
 def test_param():
@@ -70,134 +68,84 @@ def test_param():
     ch = 0
 
     #print("\n # Seconds record")
-    nsecs = 2
+    nsecs = 2 
 
     #print("\nExport filename?")
     fname = "ch"+str(ch)
+   
 
-# This should eventually move into adi folder, and add an import to __init__
-class cn0501(ad7768):
-    def __init__(self, uri=""):
-        ad7768.__init__(self, uri=uri)
+def cn0501(): 
+    srate = [8000,16000,32000,64000,128000,256000]
 
-    def single_capture(self):
-        self.power_mode = "FAST_MODE" #FAST_MODE MEDIAN_MODE LOW_POWER_MODE
-        self.filter = "WIDEBAND"
-        self.sample_rate = 8000
-        self.rx_buffer_size = 800
-        x = self.rx()
-        return x
-        #max 512000
+    for sps in srate:
+        adc = ad7768(uri="ip:169.254.92.202")
+        adc.power_mode = "FAST_MODE" #FAST_MODE MEDIAN_MODE LOW_POWER_MODE
+        adc.filter = "SINC5"
+        adc.sample_rate = sps 
+        adc.rx_buffer_size = int(sps*2) #max 512000
+    
+        #print("Sample Rate")
+        #print(adc.sample_rate)
 
+        #print("Buffer Size")
+        #print(adc.rx_buffer_size)
 
-    def run_sample_rate_tests(self):
-        srate = [8000,16000,32000,64000,128000,256000]
-        for sps in srate:
+        #print("Kernel Buffers Count")
+        #print(adc.get_kernel_buffers_count)
 
-            self.power_mode = "FAST_MODE" #FAST_MODE MEDIAN_MODE LOW_POWER_MODE
-            self.filter = "SINC5"
-            self.sample_rate = sps
-            self.rx_buffer_size = int(sps*2) #max 512000
-
-            print("Sample Rate")
-            print(self.sample_rate)
-
-            print("Buffer Size")
-            print(self.rx_buffer_size)
-
-#            print("Kernel Buffers Count")
-#            print(self.get_kernel_buffers_count)
-
-            print("Enabled Channels")
-            print (self.rx_enabled_channels)
-
-            #sec_rec = math.ceil(adc.sample_rate/adc.rx_buffer_size)*nsecs #use if 1 sec worth of record
-            sec_rec = math.ceil(self.sample_rate/self.rx_buffer_size) #use for n sec worth
+        #print("Enabled Channels")
+        #print (adc.rx_enabled_channels)
+        
+        #sec_rec = math.ceil(adc.sample_rate/adc.rx_buffer_size)*nsecs #use if 1 sec worth of record
+        sec_rec = math.ceil(adc.sample_rate/adc.rx_buffer_size) #use for n sec worth
 
 
-            print("\nSTART RECORD\n")
-            for nloop in range(0,loops):
-                #print(nloop)
-                vdata = np.empty( shape=(8, 0) ) # Change 8 to number of enabled channels
-                count = 0
-                dt = []
-                start = time.time()
-                for _ in range(int(sec_rec)):
-                        np.concatenate((vdata, self.rx()), axis=1)
-                        count += len(vdata[ch])
-                end = time.time()
-                rec_time = (end - start)
+        print("\nSTART RECORD\n")
+        for nloop in range(0,loops):
+            #print(nloop)
+            vdata = []
+            count = 0
+            dt = []
+            start = time.time()
+            for _ in range(int(sec_rec)):
+                    #dstart = time.time()    ####
+                    data = adc.rx()         #TRANSACTION
+                    #dend = time.time()      ####
+                    vdata.append(data[ch])  
+                    #dt.append(dend-dstart)  ####
+                    count += len(data[ch])
+            end = time.time()
+            rec_time = (end - start)
+            
+            #print("Sample rate:   " + str(srate[0]) +"sps")
+            #print("Buffer length:   " + str(adc.rx_buffer_size) +"")
+            #print("No. of buffers:   " + str(sec_rec) +"")
+            print("Total Elapsed:   " + str(rec_time) +"s")
+            #print("adc.rx() Elapsed: " + str(np.sum(dt)) +"s")
+            #print("Average adc.rx() Elapsed: " + str(np.mean(dt)) +"s")
+            #print("others Elapsed: " + str(rec_time-np.sum(dt)) +"s")
 
-                #print("Sample rate:   " + str(srate[0]) +"sps")
-                #print("Buffer length:   " + str(adc.rx_buffer_size) +"")
-                #print("No. of buffers:   " + str(sec_rec) +"")
-                print("Total Elapsed:   " + str(rec_time) +"s")
-                #print("adc.rx() Elapsed: " + str(np.sum(dt)) +"s")
-                #print("Average adc.rx() Elapsed: " + str(np.mean(dt)) +"s")
-                #print("others Elapsed: " + str(rec_time-np.sum(dt)) +"s")
+            vdata_arr = np.asarray(vdata)
+            vdata_arr = vdata_arr.reshape(count,1)
 
-                #vdata_arr = np.asarray(vdata)
-                #vdata_arr = vdata_arr.reshape(count,1)
-                vdata_arr = vdata
+            DF = pd.DataFrame(vdata_arr)
+            #f = fname + "_loop" + str(nloop)+"_sps"+str(sps)+"_buffer"+str(int(adc.rx_buffer_size))+".csv"
+            f = fname + "_loop" + str(nloop)+"_sps"+str(sps)+"_5vpp"+".csv"
 
+            #File directory of exported csv files 
+            #DF.to_csv(fpath+f, index = False, header = False)
 
+        
+        print("Export done")
 
-                DF = pd.DataFrame(vdata_arr)
-                #f = fname + "_loop" + str(nloop)+"_sps"+str(sps)+"_buffer"+str(int(adc.rx_buffer_size))+".csv"
-                f = fname + "_loop" + str(nloop)+"_sps"+str(sps)+"_5vpp"+".csv"
+def main():
+    test_param()
+    m2k_ricker_wav.wavdiff_out()
+    #m2k_ricker_wav.wavsingle_out()
+    cn0501()
+    m2k_ricker_wav.wav_close()
 
-                #File directory of exported csv files
-                DF.to_csv(fpath+f, index = False, header = False)
-
-            print("Export done")
-
-#def main():
-
-test_param()
-# Instantiate hardware
-mym2k = cn0501_aux_functions.wav_init()
-mycn0501 = cn0501(uri="ip:analog.local")
-
-# Pick One:
-#cn0501_aux_functions.wavdiff_out(mym2k)
-#cn0501_aux_functions.seismic_out(mym2k)
-cn0501_aux_functions.sine_1k_out(mym2k)
-#cn0501_aux_functions.wavsingle_out()
-
-
-#mycn0501.run_sample_rate_tests()
-data = mycn0501.single_capture()
-cn0501_aux_functions.wav_close(mym2k)
-del mycn0501
-
-plt.figure(2)
-plt.subplot(2,1,1)
-plt.tight_layout()
-plt.title("Captured data")
-plt.xlabel("Data point")
-plt.ylabel("Volts")
-plt.plot(data[0])
-plt.subplot(2,1,2)
-plt.tight_layout()
-plt.title("FFT")
-plt.xlabel("FFT bin")
-plt.ylabel("Amplitude, dBFS")
-plt.plot(20*np.log10(windowed_fft_mag(data[0])))
-plt.ylim(-140, 0)
-plt.show()
-
-
-harmonics, snr, thd, sinad, enob, sfdr, floor = sin_params(data[0])
-print("A.C. Performance parameters (ONLY valid for a sine input):")
-print("Harmonics:", harmonics)
-print("snr: ", thd)
-print("Sinad: ", sinad)
-print("ENOB: ", enob)
-print("SFDR: ", sfdr)
-print("Noise Floor: ", floor)
-
-#    return(data[0])
-#mydata = main()
+main()
 
 '''
 '''

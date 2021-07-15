@@ -49,13 +49,9 @@ from adi.adrv9009_zu11eg_fmcomms8 import adrv9009_zu11eg_fmcomms8
 
 from adi.ad9081 import ad9081
 
-from adi.ad9081_mc import ad9081_mc, QuadMxFE
-
 from adi.ad9094 import ad9094
 
 from adi.ad9680 import ad9680
-
-from adi.ad9136 import ad9136
 
 from adi.ad9144 import ad9144
 
@@ -75,8 +71,6 @@ from adi.ad7124 import ad7124
 
 from adi.adxl345 import adxl345
 
-from adi.adxrs290 import adxrs290
-
 from adi.fmclidar1 import fmclidar1
 
 from adi.ad5686 import ad5686
@@ -87,20 +81,6 @@ from adi.ltc2983 import ltc2983
 
 from adi.one_bit_adc_dac import one_bit_adc_dac
 
-from adi.ltc2314_14 import ltc2314_14
-
-from adi.ad7606 import ad7606
-
-from adi.ad7799 import ad7799
-
-from adi.ad7746 import ad7746
-
-from adi.adpd410x import adpd410x
-
-from adi.ad7689 import ad7689
-
-from adi.adf4371 import adf4371
-
 from adi.ad7768 import ad7768
 
 try:
@@ -108,5 +88,5 @@ try:
 except ImportError:
     pass
 
-__version__ = "0.0.9"
+__version__ = "0.0.7"
 name = "Analog Devices Hardware Interfaces"
