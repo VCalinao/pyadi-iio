@@ -71,7 +71,7 @@ aout.pushRawBytes(0, buff[0], N_SAMPLES)
 aout.pushRawBytes(1, buff[1], N_SAMPLES)
 '''
 #File directory of exported csv files
-fdir = 'C:\Users\VCalinao\pyadi-iio\examples\csv_files\\'
+fdir = "C:\Users\VCalinao\pyadi-iio\examples\csv_files\\"
 
 print("Buffer size")
 print(adc.rx_buffer_size)

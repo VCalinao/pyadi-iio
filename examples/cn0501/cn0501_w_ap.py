@@ -48,9 +48,9 @@ print("ADI Packages Import done")
 
 import cn0501_aux_functions
 
-
-loops = 0
-ch = 0
+#Variable declaration (do not edit)
+loops=0
+ch=0
 nsecs=0
 fname = ""
 
@@ -66,7 +66,7 @@ def test_param():
     #print("\nHow many loops?")
     loops = 1
     #print("\nWhat channel?")
-    ch = 0
+    ch = 1
 
     #print("\n # Seconds record")
     nsecs = 2
@@ -83,7 +83,7 @@ class cn0501(ad7768):
         self.power_mode = "FAST_MODE" #FAST_MODE MEDIAN_MODE LOW_POWER_MODE
         self.filter = "WIDEBAND"
         self.sample_rate = 8000
-        self.rx_buffer_size = 16384
+        self.rx_buffer_size = 8000
         x = self.rx()
         return x
         #max 512000
@@ -169,24 +169,7 @@ data = mycn0501.single_capture()
 #cn0501_aux_functions.wav_close(mym2k)
 del mycn0501
 
-plt.figure(2)
-plt.subplot(2,1,1)
-plt.tight_layout()
-plt.title("Captured data")
-plt.xlabel("Data point")
-plt.ylabel("Volts")
-plt.plot(data[0])
-plt.subplot(2,1,2)
-plt.tight_layout()
-plt.title("FFT")
-plt.xlabel("FFT bin")
-plt.ylabel("Amplitude, dBFS")
-plt.plot(20*np.log10(windowed_fft_mag(data[0])))
-plt.ylim(-140, 0)
-plt.show()
-
-
-harmonics, snr, thd, sinad, enob, sfdr, floor = sin_params(data[0])
+harmonics, snr, thd, sinad, enob, sfdr, floor = sin_params(data[ch])
 print("A.C. Performance parameters (ONLY valid for a sine input):")
 print("Harmonics:", harmonics)
 print("snr: ", thd)
@@ -194,6 +177,22 @@ print("Sinad: ", sinad)
 print("ENOB: ", enob)
 print("SFDR: ", sfdr)
 print("Noise Floor: ", floor)
+
+plt.figure(2)
+plt.subplot(2,1,1)
+plt.tight_layout()
+plt.title("Captured data CH:"+str(ch))
+plt.xlabel("Data point")
+plt.ylabel("Volts")
+plt.plot(data[ch])
+plt.subplot(2,1,2)
+plt.tight_layout()
+plt.title("FFT")
+plt.xlabel("FFT bin")
+plt.ylabel("Amplitude, dBFS")
+plt.plot(20*np.log10(windowed_fft_mag(data[ch])))
+plt.ylim(-160, 0)
+plt.show()
 
 #    return(data[0])
 #mydata = main()
