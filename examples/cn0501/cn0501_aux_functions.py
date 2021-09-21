@@ -40,12 +40,12 @@ t = np.arange(0,1,1/N)
 
 
 #Ricker wavelet
-vpp =  .5                        #pk-pk amplitude of wavelet
+vpp =  1                        #pk-pk amplitude of wavelet
 n_peak= 2                           #Number of wavelet peaks
 n_points = int(N/n_peak)            #number of points per wavelet
 width_param = int(n_points*.05)     #5% width parameter
-vcm = 2.5                           #VCM of AD7768 (2.5V default)
-
+vcm = 2.5                          #VCM of AD7768 (2.5V default)
+#vcm = 0
 x = ricker(n_points,width_param)    #generate wavelet
 
 v_scale = vpp/(np.max(x)-np.min(x))/2 #scale to fit vpp

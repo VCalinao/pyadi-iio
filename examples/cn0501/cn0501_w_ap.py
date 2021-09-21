@@ -43,7 +43,7 @@ print("Python Packages Import done")
 
 from adi.ad7768 import ad7768
 #import libm2k
-from py_utils.sin_params import *
+#from py_utils.sin_params import *
 print("ADI Packages Import done")
 
 import cn0501_aux_functions
@@ -66,7 +66,7 @@ def test_param():
     #print("\nHow many loops?")
     loops = 1
     #print("\nWhat channel?")
-    ch = 1
+    ch = 0
 
     #print("\n # Seconds record")
     nsecs = 2
@@ -83,7 +83,19 @@ class cn0501(ad7768):
         self.power_mode = "FAST_MODE" #FAST_MODE MEDIAN_MODE LOW_POWER_MODE
         self.filter = "WIDEBAND"
         self.sample_rate = 8000
-        self.rx_buffer_size = 8000
+        self.rx_buffer_size = self.sample_rate*2
+
+        print("Sample Rate")
+        print(self.sample_rate)
+
+        print("Buffer Size")
+        print(self.rx_buffer_size)
+        #print("Kernel Buffers Count")
+        #print(self.get_kernel_buffers_count)
+
+        print("Enabled Channels")
+        print (self.rx_enabled_channels)
+
         x = self.rx()
         return x
         #max 512000
@@ -139,14 +151,12 @@ class cn0501(ad7768):
                 #vdata_arr = vdata_arr.reshape(count,1)
                 vdata_arr = vdata
 
-
-
-                DF = pd.DataFrame(vdata_arr)
+                #DF = pd.DataFrame(vdata_arr)
                 #f = fname + "_loop" + str(nloop)+"_sps"+str(sps)+"_buffer"+str(int(adc.rx_buffer_size))+".csv"
                 f = fname + "_loop" + str(nloop)+"_sps"+str(sps)+"_5vpp"+".csv"
 
                 #File directory of exported csv files
-                DF.to_csv(fpath+f, index = False, header = False)
+                #DF.to_csv(fpath+f, index = False, header = False)
 
             print("Export done")
 
@@ -154,45 +164,62 @@ class cn0501(ad7768):
 
 test_param()
 # Instantiate hardware
-#mym2k = cn0501_aux_functions.wav_init()
+mym2k = cn0501_aux_functions.wav_init()
 mycn0501 = cn0501(uri="ip:analog.local")
 
 # Pick One:
-#cn0501_aux_functions.wavdiff_out(mym2k)
+cn0501_aux_functions.wavdiff_out(mym2k)
 #cn0501_aux_functions.seismic_out(mym2k)
 #cn0501_aux_functions.sine_1k_out(mym2k)
-#cn0501_aux_functions.wavsingle_out()
-
+#cn0501_aux_functions.wavsingle_out(mym2k)
 
 #mycn0501.run_sample_rate_tests()
 data = mycn0501.single_capture()
 #cn0501_aux_functions.wav_close(mym2k)
 del mycn0501
 
-harmonics, snr, thd, sinad, enob, sfdr, floor = sin_params(data[ch])
-print("A.C. Performance parameters (ONLY valid for a sine input):")
-print("Harmonics:", harmonics)
-print("snr: ", thd)
-print("Sinad: ", sinad)
-print("ENOB: ", enob)
-print("SFDR: ", sfdr)
-print("Noise Floor: ", floor)
+print(len(data))
 
+
+#adjsut to zero
+data[2] = data[2]-min(data[2])
+data[1] = data[1]-min(data[1])
+
+#scale = (max(data[2])-min(data[2]))/(max(data[1])-min(data[1]))
+sf = max(data[2])/max(data[1])
+print(sf)
+
+t = np.arange(0,2,1/8000)
 plt.figure(2)
-plt.subplot(2,1,1)
+#plt.subplot(2,1,1)
 plt.tight_layout()
-plt.title("Captured data CH:"+str(ch))
-plt.xlabel("Data point")
+plt.title("Captured data")
+plt.xlabel("Seconds")
 plt.ylabel("Volts")
-plt.plot(data[ch])
-plt.subplot(2,1,2)
-plt.tight_layout()
-plt.title("FFT")
-plt.xlabel("FFT bin")
-plt.ylabel("Amplitude, dBFS")
-plt.plot(20*np.log10(windowed_fft_mag(data[ch])))
-plt.ylim(-160, 0)
+#plt.plot(t,data[1],color='red')
+plt.plot(t,data[2]/max(data[2]),color='green')
+
+#plt.figure(3)
+#plt.tight_layout()
+#plt.title("Captured data, CH1 (Scaled)")
+#plt.xlabel("Seconds")
+#plt.ylabel("Volts")
+#plt.plot(t,data[1]*sf,color='red')
+#plt.plot(t,data[2],color='green')
+#plt.plot(data[1]*scale,color='red')
+#plt.plot(20*np.log10(windowed_fft_mag(data[ch]))) 
+#plt.ylim(-160, 0)
 plt.show()
+
+
+#harmonics, snr, thd, sinad, enob, sfdr, floor = sin_params(data[ch])
+#print("A.C. Performance parameters (ONLY valid for a sine input):")
+#print("Harmonics:", harmonics)
+#print("snr: ", thd)
+#print("Sinad: ", sinad)
+#print("ENOB: ", enob)
+#print("SFDR: ", sfdr)
+#print("Noise Floor: ", floor)
 
 #    return(data[0])
 #mydata = main()
